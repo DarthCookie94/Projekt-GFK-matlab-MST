@@ -2,10 +2,13 @@ clc;
 clear all;
 close all;
 
-% Bilder laden und mittel Schwellwert auf 0 oder 255 setzen 
+% Bilder laden und mittels Schwellwert auf 0 oder 255 setzen 
 A=filter(imread('..\images\bildebene\normal0.jpg'),180);
 B=filter(imread('..\images\bildebene\normal1.jpg'),180);
 
+%Bilder laden ohne Filter
+% A=imread('..\images\bildebene\normal0.jpg');
+% B=imread('..\images\bildebene\normal1.jpg');
 
 % Anzahl Subbereiche
 anzSub = 5;
@@ -18,14 +21,14 @@ for i = 0:anzSub-1
         starty = round(i/anzSub * size(A,1)) + 1;
         endey = round((i+1)/anzSub * size(A,1));
         startx = round(j/anzSub * size(A,2)) + 1;
-        endex = round((j+1)/anzSub * size(A,2));
+        endex = round((j+1)/anzSub * size(A),2);
         subA = A(starty:endey,startx:endex);
         subB = B(starty:endey,startx:endex);
         peak = getPeak(subA,subB)
         peakMatx(i+1,j+1) = peak(1);
         peakMaty(i+1,j+1) = peak(2);
         
-        % Bildauschnitt darstellen
+        %Bildauschnitt darstellen
 %         figure();
 %         imshow(subA);
 %         axis on;
@@ -40,6 +43,16 @@ u = peakMatx(x)
 v = peakMaty(y)
 quiver(x,y,u,v)
 
+ %Kreutzkorrelation via Subpixelmethode
+usfac = 100; %Genauigkeit auf 1/usfac 
+[output, Greg] = dftregistration(fft2(ima),fft2(imb),usfac);
+display(output);
+% %output = 1x4 double
+% %Wert 1: normalized root-mean-squared error
+% %Wert 2: global phase shift -> ideal ist 0
+% %Wert 3: shift row
+% %Wert 4: shift column
+
 function y = getPeak(ima,imb)
 % Bildauschnitt darstellen
 % figure();
@@ -50,6 +63,20 @@ function y = getPeak(ima,imb)
 % imshow(B(x,x));
 % axis on;
 
+%Kommentar von Niklas: Das funkt nicht mit den Bildausschnitten
+% %Kreutzkorrelation via Subpixelmethode
+% usfac = 100; %Genauigkeit auf 1/usfac 
+% [output, Greg] = dftregistration(fft2(ima),fft2(imb),usfac);
+% display(output);
+% %output = 1x4 double
+% %Wert 1: normalized root-mean-squared error
+% %Wert 2: global phase shift -> ideal ist 0
+% %Wert 3: shift row
+% %Wert 4: shift column
+% 
+% % Peaks bestimmen
+% xpeak = output(3);
+% ypeak = output(4);
 
 % Korrelation bilden
 C = xcorr2(ima,imb);
@@ -72,7 +99,7 @@ grid on
 hold on 
 
 ax = axis
-axis([ -5 5 -5 5])
+axis([ 0 7 0 6])
 title('Vektorfeld')
 xlabel ('Verschiebung in x-Richtung')
 ylabel ('Verschiebung in y-Richtung')
