@@ -23,3 +23,16 @@
 % nu = 4;
 % p = tcdf(x,nu);
 
+clear all; 
+
+M = magic(3);
+
+for i = 1:3
+    for j = 1:3
+    if M(i,j) < 5
+        M(i,j) = 10;
+    end
+    
+    disp(M(i,j));
+    end
+end

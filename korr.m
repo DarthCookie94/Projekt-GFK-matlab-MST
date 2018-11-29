@@ -5,12 +5,16 @@ close all;
 % Bilder laden und mittels Schwellwert auf 0 oder 255 setzen 
 % Schwellwert so setzen, sodass es keine Subpixel mit nur Nullen und nur
 % Einsen entstehen
-% A=filter(double(imread('..\images\bildebene\10u0.jpg')),30);
-% B=filter(double(imread('..\images\bildebene\10u1.jpg')),30);
+% A=filterpictobin(double(imread('..\images\bildebene\10u0.jpg')),30);
+% B=filterpictobin(double(imread('..\images\bildebene\10u1.jpg')),30);
 
 %Bilder laden ohne Filter
 A=double(imread('..\images\bildebene\10u0.jpg'));
 B=double(imread('..\images\bildebene\10u1.jpg'));
+
+% %Bilder laden ohne Filter bei Niklsd sein Pc
+% A=double(imread('C:\Users\Niklsd\Pictures\bildebene\10u0.jpg'));
+% B=double(imread('C:\Users\Niklsd\Pictures\bildebene\10u1.jpg'));
 
 % Anzahl Subbereiche
 anzSub = 10;
@@ -31,24 +35,23 @@ for i = 0:anzSub-1
         peakMaty(i+1,j+1) = peak(2);
         
     end
-    progress = i/anzSub * 100 
+    progress = i/anzSub * 100; 
 end
 
 %Ausreisser eliminieren durch prüfen auf Zugehörigkeit des Konfidenzintervalls
-%S = std(A,w,'all') computes the standard deviation over all elements of A when w is either 0 or 1.
-%When w = 0 (default), S is normalized by N-1. When w = 1, S is normalized by the number of observations, N.
+%Standardabweichung berechnen
 sigmax = std(peakMatx,'omitnan');
 sigmay = std(peakMaty,'omitnan');
 
 
-%M = mean(A,'all') computes the mean over all elements of A.
+%M = mean(A) Mittelwert berechnen
 meanx = mean(peakMatx);
-meanx = mean(peakMaty);
+meany = mean(peakMaty);
 
 %Stuudent t'scher Faktor t
 %n= anzahlSub * anzahlSub; 100
 %In t-quantil-Tabelle nachschauen:
-%n = 100 -> t= 1,984
+%n = 100 , bidirektionales Intervall um 95%-> t= 1,984
 n = 100;
 t = 1.984;
 lowerboundx = meanx - t * (sigmax / sqrt(n));
@@ -56,10 +59,30 @@ upperboundx = meanx + t * (sigmax / sqrt(n));
 lowerboundy = meany - t * (sigmay / sqrt(n));
 upperboundy = meany + t * (sigmay / sqrt(n));
 
+%Filtern von Aussreissern ausserhalb des Konfidenzintervalls
+for i = 1:anzSub
+    for j = 1:anzSub
+        
+       if isnan(peakMatx(i,j))
+       peakMatx(i,j) = NaN;
+       elseif peakMatx(i,j) < lowerboundx
+           peakMatx(i,j) = NaN;
+       elseif peakMatx(i,j) > upperboundx
+           peakMatx(i,j) = NaN;
+       end
+        
+       
+        if isnan(peakMaty(i,j))
+       peakMaty(i,j) = NaN;
+       elseif peakMaty(i,j) < lowerboundy
+           peakMaty(i,j) = NaN;
+       elseif peakMaty(i,j) > upperboundy
+           peakMaty(i,j) = NaN;
+        end
+    end
+end
 
 
-peakMatx
-peakMaty
 %plot Vektorfeld
 x = 1:1:anzSub;
 y = 1:1:anzSub;
@@ -76,57 +99,6 @@ ylabel ('Verschiebung in y-Richtung');
 
 
 
-function y = getPeakSub(ima,imb)
-
-%Kreutzkorrelation via Subpixelmethode
-usfac = 500; %Genauigkeit auf 1/usfac 
-[output, Greg] = dftregistration(fft2(ima),fft2(imb),usfac);
-%output = 1x4 double
-%Wert 1: normalized root-mean-squared error
-%Wert 2: global phase shift -> ideal ist 0
-%Wert 3: shift row
-%Wert 4: shift column
 
 
-%Kommentar Niklas: schreibt hier mal bitte mehr zu. Mir ist das nicht
-%richtig klar wieso hier uaf NaN geprüft werden muss...
-% Peaks bestimmen
-if isnan(output(1))
-    ypeak = NaN;
-    xpeak = NaN;
-else
-    ypeak = output(3);
-    xpeak = output(4);
-end 
 
-y = [xpeak,ypeak];
-end
-
-function y = getPeak(ima,imb)
-
-% Korrelation bilden
-C = xcorr2(ima,imb);
-
-% Peaks bestimmen
-[max_cc, imax] = max(abs(C(:)));
-[ypeak, xpeak] = ind2sub(size(C),imax(1));
-xpeak = xpeak - size(ima,2);
-ypeak = ypeak - size(ima,1);
-
-y = [xpeak,ypeak];
-end
-
-
-% filtert ein Bild mit Schwellenwert
-function y = filterpictobin(x,boarder)
-for i = 1:size(x,1)
-    for j = 1:size(x,2)
-        if x(i,j) > boarder
-            x(i,j)  = 255;
-        else   
-            x(i,j)  = 0;
-        end
-    end   
-end            
-y = x; 
-end
