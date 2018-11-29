@@ -34,6 +34,30 @@ for i = 0:anzSub-1
     progress = i/anzSub * 100 
 end
 
+%Ausreisser eliminieren durch prüfen auf Zugehörigkeit des Konfidenzintervalls
+%S = std(A,w,'all') computes the standard deviation over all elements of A when w is either 0 or 1.
+%When w = 0 (default), S is normalized by N-1. When w = 1, S is normalized by the number of observations, N.
+sigmax = std(peakMatx,'omitnan');
+sigmay = std(peakMaty,'omitnan');
+
+
+%M = mean(A,'all') computes the mean over all elements of A.
+meanx = mean(peakMatx);
+meanx = mean(peakMaty);
+
+%Stuudent t'scher Faktor t
+%n= anzahlSub * anzahlSub; 100
+%In t-quantil-Tabelle nachschauen:
+%n = 100 -> t= 1,984
+n = 100;
+t = 1.984;
+lowerboundx = meanx - t * (sigmax / sqrt(n));
+upperboundx = meanx + t * (sigmax / sqrt(n));
+lowerboundy = meany - t * (sigmay / sqrt(n));
+upperboundy = meany + t * (sigmay / sqrt(n));
+
+
+
 peakMatx
 peakMaty
 %plot Vektorfeld
@@ -92,9 +116,6 @@ ypeak = ypeak - size(ima,1);
 y = [xpeak,ypeak];
 end
 
-function y = studentt()
-
-end
 
 % filtert ein Bild mit Schwellenwert
 function y = filterpictobin(x,boarder)
