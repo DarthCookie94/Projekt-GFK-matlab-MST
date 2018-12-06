@@ -38,8 +38,12 @@ function y = korr(A,B, subSetSize)
     sigmax = std2(peakMatx);
     sigmay = std2(peakMaty);
 
+    
     meanx = mean(mean(peakMatx));
     meany = mean(mean(peakMaty));
+    
+%     absdiffx =
+%     absdiffy = 
 
     % 3 Sigma Intervall
     % lowerboundx = meanx - 3 * sigmax;
@@ -49,7 +53,21 @@ function y = korr(A,B, subSetSize)
     % fprintf('Verschiebung in X: %f +- %f -->[%f,%f] \n', meanx, 3 * sigmax, lowerboundx, upperboundx);
     % fprintf('Verschiebung in Y: %f +- %f -->[%f,%f] \n', meany, 3 * sigmay, lowerboundy, upperboundy);
 
-    %Ausreisser eliminieren durch prüfen auf Zugehörigkeit des Konfidenzintervalls
+    %Konfidenzintervall berechnen
+        %Stuudent t'scher Faktor t
+    n = anzahlSub * anzahlSub; %100
+    %In t-quantil-Tabelle nachschauen:
+    %n = 100 -> t= 1,984
+    % x = tinv(p,nu) berechnet t benötigt aber besondere Lizensen
+    
+    t = 1.984;
+    lowerboundx = meanx - t * (sigmax / sqrt(n));
+    upperboundx = meanx + t * (sigmax / sqrt(n));
+    lowerboundy = meany - t * (sigmay / sqrt(n));
+    upperboundy = meany + t * (sigmay / sqrt(n));
+
+%     fprintf('Verschiebung in X: %f Konfidenzintervall: [%f,%f] \n', meanx, lowerboundx, upperboundx);
+%     fprintf('Verschiebung in Y: %f Konfidenzintervall: [%f,%f] \n', meany, lowerboundy, upperboundy);
 
 
     %plot Vektorfeld
@@ -107,5 +125,7 @@ function y = korr(A,B, subSetSize)
     y = [xpeak,ypeak];
     end
 
-y = [meanx, meany, sigmax, sigmay];
+    function y = konfi() 
+
+y = [meanx, meany, sigmax, sigmay,lowerboundx,upperboundx,lowerboundy,upperboundy];
 end
